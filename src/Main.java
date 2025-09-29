@@ -24,6 +24,13 @@ void main() {
 //# inside the container:
 //java -cp /workspace/build/classes -DmodelDir=/models/deps demo.GenAiSmoke
 
+//java \
+    //--enable-native-access=ALL-UNNAMED \
+   //-Djava.library.path="$ONNX_LIB_PATH" \
+   //-cp /workspace/out/production/jextract-onnx \
+//   -DmodelDir=/models/deps/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4 \
+//   demo.GenAiSmoke
+
 //rm -f /usr/local/bin/jextract
 //cat >/usr/local/bin/jextract <<'SH'
 //#!/usr/bin/env bash

@@ -1,23 +1,24 @@
 package main.java.demo;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.function.Consumer;
 
+import static ffi.genai.ort_genai_c_h.*;
 import static jdk.internal.foreign.abi.SharedUtils.C_POINTER;
-import static jdk.internal.foreign.abi.x64.sysv.CallArranger.*;
+import ffi.genai.ort_genai_c_h;
 
+// This is the Java code in a C idiomatic way using the C mirror - API exposed in Java
 public class GenAiSmoke implements AutoCloseable {
 
     static final String PROMPT_TEMPLATE = """
             <|system|>
             You are a helpful assistant. <|end|>
             <User>
-            %t<|and|>
+            %s<|and|>
             <|assistant|>""";
 
     private final Arena arena;
@@ -30,25 +31,25 @@ public class GenAiSmoke implements AutoCloseable {
         this.out = out;
 
         model = call(OgaCreateModel(arena.allocateFrom(modelPath), ret))
-                .reinterpret(arena, ort_genai_c_h.OgaCreateModel());
+                .reinterpret(arena, ort_genai_c_h::OgaDestroyModel);
         tokenizer = call(OgaCreateTokenizer(model, ret))
-                .reinterpret(arena, ort_genai_c_h.OgaCreateTokenizer());
+                .reinterpret(arena, ort_genai_c_h::OgaDestroyTokenizer);
         tokenizerStream = call(OgaCreateTokenizerStream(tokenizer, ret))
-                .reinterpret(arena, ort_genai_c_h.OgaCreateTokenizerStream());
+                .reinterpret(arena, ort_genai_c_h::OgaDestroyTokenizerStream);
         generatorParams = call(OgaCreateGeneratorParams(model, ret))
-                .reinterpret(arena, ort_genai_c_h.OgaCreateGeneratorParams());
-        call(OgaGeneratorParamsSetSearchNumber(generatorParams, arena.allocateFrom("")));
-        generator = call(OgaCreateGenerator(arena.allocateFrom(modelPath), ret))
-                .reinterpret(arena, ort_genai_c_h.OgaCreateGenerator);
+                .reinterpret(arena, ort_genai_c_h::OgaDestroyGeneratorParams);
+        call(OgaGeneratorParamsSetSearchNumber(generatorParams, arena.allocateFrom("max_length"), 1));
+        generator = call(OgaCreateGenerator(model, generatorParams, ret))
+                .reinterpret(arena, ort_genai_c_h::OgaDestroyGenerator);
         count = arena.allocate(C_LONG);
     }
 
     private MemorySegment call(MemorySegment status) {
         try {
             if (!status.equals(MemorySegment.NULL)) {
-                status = status.reinterpret(C_LONG.byteSize());
-                if (status.get(C_LONG, 0) ! = 0){
-                    String emptyString = OgaResultSetError(status)
+                status = status.reinterpret(C_INT.byteSize());
+                if (status.get(C_INT, 0) != 0){
+                    String emptyString = OgaResultGetError(status)
                             .reinterpret(Long.MAX_VALUE)
                             .getString(0L);
                     throw new RuntimeException(emptyString);
@@ -65,14 +66,14 @@ public class GenAiSmoke implements AutoCloseable {
         var inputTokens = call(OgaCreateSequences(ret));
         int tokens = 0;
         try {
-            call(OgaTokenizerEncoder(tokenizer, arena.allocateFrom(PROMPT_TEMPLATE.formatted(prompt)), ret));
-            call(OgaGenerator_AppendTokenSequence(generator, inputTokens));
+            call(OgaTokenizerEncode(tokenizer, arena.allocateFrom(PROMPT_TEMPLATE.formatted(prompt)), ret));
+            call(OgaGenerator_AppendTokenSequences(generator, inputTokens));
             //      while not generator.is_done():
-            while (!OgaGenerator(generator)) {
+            while (!OgaGenerator_IsDone(generator)) {
                 tokens++;
-                call(OgaGenerator_GenerateNextToken(generator, inputTokens));
-                int nextToken = call(OgaGenerator_GenerateNextToken(generator, inputTokens));
-                String response = call(OgaGenerator_GenerateNextToken(generator, inputTokens));
+                call(OgaGenerator_GenerateNextToken(generator));
+                int nextToken = call(OgaGenerator_GetNextTokens(generator, ret, count)).get(C_INT, 0);
+                String response = call(OgaTokenizerStreamDecode(generator, nextToken, ret)).getString(0);
                 out.accept(response);
 
             }
@@ -84,10 +85,10 @@ public class GenAiSmoke implements AutoCloseable {
         }
     }
 
-    static void main(String[] args) throws IOException {
+    static void main(String[] args) throws Exception {
         System.loadLibrary("onnxruntime_genai");
         Reader reader = new InputStreamReader(System.in);
-        try (var gen = new OnnxGenerator(args[0], System.out::print)){
+        try (var gen = new GenAiSmoke(args[0], System.out::print)){
             BufferedReader in = new BufferedReader(reader);
             String line;
             System.out.print("");

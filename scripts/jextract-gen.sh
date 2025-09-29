@@ -36,12 +36,6 @@ echo "Using GenAI shim   : $SHIM_DIR/ort_genai_c.h"
   "$ORT_HDR"
 
 # GenAI C API (use the discovered header!)
-#"$JX" \
-#  -I "$GENAI/include" -I "$ORT/include" \
-#  -l onnxruntime-genai -l onnxruntime \
-#  --target-package ffi.genai \
-#  --output "$OUT/genai" \
-#  "$GENAI_HDR"
 
 "$JX" \
   -I "$SHIM_DIR" -I "$GENAI/include" -I "$ORT/include" \
@@ -51,3 +45,4 @@ echo "Using GenAI shim   : $SHIM_DIR/ort_genai_c.h"
   "$SHIM_DIR/ort_genai_c.h"
 
 echo "jextract done → $OUT/{ort,genai}"
+
