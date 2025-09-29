@@ -6,12 +6,11 @@ import java.io.Reader;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.function.Consumer;
+import java.lang.foreign.ValueLayout;
 
 import static ffi.genai.ort_genai_c_h.*;
-import static jdk.internal.foreign.abi.SharedUtils.C_POINTER;
 import ffi.genai.ort_genai_c_h;
 
-// This is the Java code in a C idiomatic way using the C mirror - API exposed in Java
 public class GenAiSmoke implements AutoCloseable {
 
     static final String PROMPT_TEMPLATE = """
@@ -27,7 +26,7 @@ public class GenAiSmoke implements AutoCloseable {
 
     public GenAiSmoke(String modelPath, Consumer<String> out) {
         arena = Arena.ofConfined();
-        ret = arena.allocate(C_POINTER);
+        ret = arena.allocate(ValueLayout.ADDRESS);
         this.out = out;
 
         model = call(OgaCreateModel(arena.allocateFrom(modelPath), ret))
@@ -41,13 +40,13 @@ public class GenAiSmoke implements AutoCloseable {
         call(OgaGeneratorParamsSetSearchNumber(generatorParams, arena.allocateFrom("max_length"), 1));
         generator = call(OgaCreateGenerator(model, generatorParams, ret))
                 .reinterpret(arena, ort_genai_c_h::OgaDestroyGenerator);
-        count = arena.allocate(C_LONG);
+        count = arena.allocate(ValueLayout.JAVA_LONG);
     }
 
     private MemorySegment call(MemorySegment status) {
         try {
             if (!status.equals(MemorySegment.NULL)) {
-                status = status.reinterpret(C_INT.byteSize());
+                status = status.reinterpret(ValueLayout.JAVA_INT.byteSize());
                 if (status.get(C_INT, 0) != 0){
                     String emptyString = OgaResultGetError(status)
                             .reinterpret(Long.MAX_VALUE)
@@ -55,7 +54,7 @@ public class GenAiSmoke implements AutoCloseable {
                     throw new RuntimeException(emptyString);
                 }
             }
-            return ret.get(C_POINTER, 0);
+            return ret.get(ValueLayout.ADDRESS, 0);
         } finally {
             OgaDestroyResult(status);
         }
@@ -86,15 +85,15 @@ public class GenAiSmoke implements AutoCloseable {
     }
 
     static void main(String[] args) throws Exception {
-        System.loadLibrary("onnxruntime_genai");
+        System.loadLibrary("onnxruntime-genai");
         Reader reader = new InputStreamReader(System.in);
         try (var gen = new GenAiSmoke(args[0], System.out::print)){
             BufferedReader in = new BufferedReader(reader);
             String line;
-            System.out.print("");
+            System.out.print("> ");
             while ((line = in.readLine()) != null){
                 gen.prompt(line);
-                System.out.println(", ");
+                System.out.println("> ");
 
             }
         in.close();
