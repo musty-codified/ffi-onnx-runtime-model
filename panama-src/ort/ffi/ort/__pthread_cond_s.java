@@ -60,7 +60,7 @@ public class __pthread_cond_s {
         return __wseq$LAYOUT;
     }
 
-    private static final long __wseq$OFFSET = 0;
+    private static final long __wseq$OFFSET = $LAYOUT.byteOffset(groupElement("__wseq"));
 
     /**
      * Offset for field:
@@ -104,7 +104,7 @@ public class __pthread_cond_s {
         return __g1_start$LAYOUT;
     }
 
-    private static final long __g1_start$OFFSET = 8;
+    private static final long __g1_start$OFFSET = $LAYOUT.byteOffset(groupElement("__g1_start"));
 
     /**
      * Offset for field:
@@ -148,7 +148,7 @@ public class __pthread_cond_s {
         return __g_refs$LAYOUT;
     }
 
-    private static final long __g_refs$OFFSET = 16;
+    private static final long __g_refs$OFFSET = $LAYOUT.byteOffset(groupElement("__g_refs"));
 
     /**
      * Offset for field:
@@ -200,7 +200,7 @@ public class __pthread_cond_s {
      * }
      */
     public static int __g_refs(MemorySegment struct, long index0) {
-        return (int)__g_refs$ELEM_HANDLE.get(struct, 0L, index0);
+        return (int)__g_refs$ELEM_HANDLE.get(struct, __g_refs$OFFSET, index0);
     }
 
     /**
@@ -210,7 +210,7 @@ public class __pthread_cond_s {
      * }
      */
     public static void __g_refs(MemorySegment struct, long index0, int fieldValue) {
-        __g_refs$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        __g_refs$ELEM_HANDLE.set(struct, __g_refs$OFFSET, index0, fieldValue);
     }
 
     private static final SequenceLayout __g_size$LAYOUT = (SequenceLayout)$LAYOUT.select(groupElement("__g_size"));
@@ -225,7 +225,7 @@ public class __pthread_cond_s {
         return __g_size$LAYOUT;
     }
 
-    private static final long __g_size$OFFSET = 24;
+    private static final long __g_size$OFFSET = $LAYOUT.byteOffset(groupElement("__g_size"));
 
     /**
      * Offset for field:
@@ -277,7 +277,7 @@ public class __pthread_cond_s {
      * }
      */
     public static int __g_size(MemorySegment struct, long index0) {
-        return (int)__g_size$ELEM_HANDLE.get(struct, 0L, index0);
+        return (int)__g_size$ELEM_HANDLE.get(struct, __g_size$OFFSET, index0);
     }
 
     /**
@@ -287,7 +287,7 @@ public class __pthread_cond_s {
      * }
      */
     public static void __g_size(MemorySegment struct, long index0, int fieldValue) {
-        __g_size$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        __g_size$ELEM_HANDLE.set(struct, __g_size$OFFSET, index0, fieldValue);
     }
 
     private static final OfInt __g1_orig_size$LAYOUT = (OfInt)$LAYOUT.select(groupElement("__g1_orig_size"));
@@ -302,7 +302,7 @@ public class __pthread_cond_s {
         return __g1_orig_size$LAYOUT;
     }
 
-    private static final long __g1_orig_size$OFFSET = 32;
+    private static final long __g1_orig_size$OFFSET = $LAYOUT.byteOffset(groupElement("__g1_orig_size"));
 
     /**
      * Offset for field:
@@ -346,7 +346,7 @@ public class __pthread_cond_s {
         return __wrefs$LAYOUT;
     }
 
-    private static final long __wrefs$OFFSET = 36;
+    private static final long __wrefs$OFFSET = $LAYOUT.byteOffset(groupElement("__wrefs"));
 
     /**
      * Offset for field:
@@ -390,7 +390,7 @@ public class __pthread_cond_s {
         return __g_signals$LAYOUT;
     }
 
-    private static final long __g_signals$OFFSET = 40;
+    private static final long __g_signals$OFFSET = $LAYOUT.byteOffset(groupElement("__g_signals"));
 
     /**
      * Offset for field:
@@ -442,7 +442,7 @@ public class __pthread_cond_s {
      * }
      */
     public static int __g_signals(MemorySegment struct, long index0) {
-        return (int)__g_signals$ELEM_HANDLE.get(struct, 0L, index0);
+        return (int)__g_signals$ELEM_HANDLE.get(struct, __g_signals$OFFSET, index0);
     }
 
     /**
@@ -452,7 +452,7 @@ public class __pthread_cond_s {
      * }
      */
     public static void __g_signals(MemorySegment struct, long index0, int fieldValue) {
-        __g_signals$ELEM_HANDLE.set(struct, 0L, index0, fieldValue);
+        __g_signals$ELEM_HANDLE.set(struct, __g_signals$OFFSET, index0, fieldValue);
     }
 
     /**

@@ -36,7 +36,6 @@ echo "Using GenAI shim   : $SHIM_DIR/ort_genai_c.h"
   "$ORT_HDR"
 
 # GenAI C API (use the discovered header!)
-
 "$JX" \
   -I "$SHIM_DIR" -I "$GENAI/include" -I "$ORT/include" \
   -l onnxruntime-genai -l onnxruntime \

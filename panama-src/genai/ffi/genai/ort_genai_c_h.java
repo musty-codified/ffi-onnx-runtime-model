@@ -12,64 +12,19 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-public class ort_genai_c_h {
+public class ort_genai_c_h extends ort_genai_c_h$shared {
 
     ort_genai_c_h() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.find(symbol)
-            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("onnxruntime-genai"), LIBRARY_ARENA)
             .or(SymbolLookup.libraryLookup(System.mapLibraryName("onnxruntime"), LIBRARY_ARENA))
             .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
-    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
-    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
-    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
-    public static final ValueLayout.OfLong C_LONG = ValueLayout.JAVA_LONG;
     private static final int _STDINT_H = (int)1L;
     /**
      * {@snippet lang=c :
@@ -1294,7 +1249,7 @@ public class ort_genai_c_h {
      */
     public static class OgaShutdown {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.ofVoid(        );
-        private static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaShutdown");
+        private static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaShutdown");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -1361,7 +1316,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaResultGetError");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaResultGetError");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1408,6 +1363,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaResultGetError", result);
             }
             return (MemorySegment)mh$.invokeExact(result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1420,7 +1377,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_BOOL
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSetLogBool");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSetLogBool");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1467,6 +1424,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSetLogBool", name, value);
             }
             return (MemorySegment)mh$.invokeExact(name, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1479,7 +1438,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSetLogString");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSetLogString");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1526,6 +1485,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSetLogString", name, value);
             }
             return (MemorySegment)mh$.invokeExact(name, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1537,7 +1498,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSetLogCallback");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSetLogCallback");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1584,6 +1545,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSetLogCallback", callback);
             }
             return (MemorySegment)mh$.invokeExact(callback);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1594,7 +1557,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyResult");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyResult");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1641,6 +1604,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyResult", result);
             }
             mh$.invokeExact(result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1651,7 +1616,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyString");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyString");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1698,6 +1663,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyString", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1708,7 +1675,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyNamedTensors");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyNamedTensors");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1755,6 +1722,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyNamedTensors", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1766,7 +1735,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateSequences");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateSequences");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1813,6 +1782,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateSequences", out);
             }
             return (MemorySegment)mh$.invokeExact(out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1823,7 +1794,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroySequences");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroySequences");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1870,6 +1841,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroySequences", sequences);
             }
             mh$.invokeExact(sequences);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1881,7 +1854,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSequencesCount");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSequencesCount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1928,6 +1901,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSequencesCount", sequences);
             }
             return (long)mh$.invokeExact(sequences);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1941,7 +1916,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaAppendTokenSequence");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaAppendTokenSequence");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1988,6 +1963,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaAppendTokenSequence", token_ptr, token_cnt, sequences);
             }
             return (MemorySegment)mh$.invokeExact(token_ptr, token_cnt, sequences);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2001,7 +1978,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaAppendTokenToSequence");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaAppendTokenToSequence");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2048,6 +2025,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaAppendTokenToSequence", token, sequences, sequence_index);
             }
             return (MemorySegment)mh$.invokeExact(token, sequences, sequence_index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2060,7 +2039,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSequencesGetSequenceCount");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSequencesGetSequenceCount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2107,6 +2086,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSequencesGetSequenceCount", sequences, sequence_index);
             }
             return (long)mh$.invokeExact(sequences, sequence_index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2119,7 +2100,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSequencesGetSequenceData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSequencesGetSequenceData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2166,6 +2147,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSequencesGetSequenceData", sequences, sequence_index);
             }
             return (MemorySegment)mh$.invokeExact(sequences, sequence_index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2178,7 +2161,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadImage");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadImage");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2225,6 +2208,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadImage", image_path, images);
             }
             return (MemorySegment)mh$.invokeExact(image_path, images);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2237,7 +2222,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadImages");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadImages");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2284,6 +2269,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadImages", image_paths, images);
             }
             return (MemorySegment)mh$.invokeExact(image_paths, images);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2298,7 +2285,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadImagesFromBuffers");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadImagesFromBuffers");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2345,6 +2332,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadImagesFromBuffers", image_data, image_data_sizes, count, images);
             }
             return (MemorySegment)mh$.invokeExact(image_data, image_data_sizes, count, images);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2355,7 +2344,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyImages");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyImages");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2402,6 +2391,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyImages", images);
             }
             mh$.invokeExact(images);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2414,7 +2405,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadAudio");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadAudio");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2461,6 +2452,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadAudio", audio_path, audios);
             }
             return (MemorySegment)mh$.invokeExact(audio_path, audios);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2473,7 +2466,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadAudios");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadAudios");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2520,6 +2513,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadAudios", audio_paths, audios);
             }
             return (MemorySegment)mh$.invokeExact(audio_paths, audios);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2534,7 +2529,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadAudiosFromBuffers");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadAudiosFromBuffers");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2581,6 +2576,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadAudiosFromBuffers", audio_data, audio_data_sizes, count, audios);
             }
             return (MemorySegment)mh$.invokeExact(audio_data, audio_data_sizes, count, audios);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2591,7 +2588,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyAudios");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyAudios");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2638,6 +2635,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyAudios", audios);
             }
             mh$.invokeExact(audios);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2649,7 +2648,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateRuntimeSettings");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateRuntimeSettings");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2696,6 +2695,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateRuntimeSettings", out);
             }
             return (MemorySegment)mh$.invokeExact(out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2706,7 +2707,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyRuntimeSettings");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyRuntimeSettings");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2753,6 +2754,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyRuntimeSettings", settings);
             }
             mh$.invokeExact(settings);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2766,7 +2769,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRuntimeSettingsSetHandle");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRuntimeSettingsSetHandle");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2813,6 +2816,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRuntimeSettingsSetHandle", settings, handle_name, handle);
             }
             return (MemorySegment)mh$.invokeExact(settings, handle_name, handle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2825,7 +2830,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateConfig");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateConfig");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2872,6 +2877,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateConfig", config_path, out);
             }
             return (MemorySegment)mh$.invokeExact(config_path, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2883,7 +2890,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigClearProviders");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigClearProviders");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2930,6 +2937,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigClearProviders", config);
             }
             return (MemorySegment)mh$.invokeExact(config);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2942,7 +2951,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigAppendProvider");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigAppendProvider");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2989,6 +2998,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigAppendProvider", config, provider);
             }
             return (MemorySegment)mh$.invokeExact(config, provider);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3003,7 +3014,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigSetProviderOption");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigSetProviderOption");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3050,6 +3061,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigSetProviderOption", config, provider, key, value);
             }
             return (MemorySegment)mh$.invokeExact(config, provider, key, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3064,7 +3077,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigAddModelData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigAddModelData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3111,6 +3124,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigAddModelData", config, model_filename, model_data, model_data_length);
             }
             return (MemorySegment)mh$.invokeExact(config, model_filename, model_data, model_data_length);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3123,7 +3138,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigRemoveModelData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigRemoveModelData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3170,6 +3185,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigRemoveModelData", config, model_filename);
             }
             return (MemorySegment)mh$.invokeExact(config, model_filename);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3182,7 +3199,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaConfigOverlay");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaConfigOverlay");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3229,6 +3246,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaConfigOverlay", config, json);
             }
             return (MemorySegment)mh$.invokeExact(config, json);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3241,7 +3260,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateModel");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateModel");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3288,6 +3307,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateModel", config_path, out);
             }
             return (MemorySegment)mh$.invokeExact(config_path, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3300,7 +3321,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateModelFromConfig");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateModelFromConfig");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3347,6 +3368,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateModelFromConfig", config, out);
             }
             return (MemorySegment)mh$.invokeExact(config, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3360,7 +3383,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateModelWithRuntimeSettings");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateModelWithRuntimeSettings");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3407,6 +3430,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateModelWithRuntimeSettings", config_path, settings, out);
             }
             return (MemorySegment)mh$.invokeExact(config_path, settings, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3419,7 +3444,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaModelGetType");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaModelGetType");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3466,6 +3491,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaModelGetType", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3478,7 +3505,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaModelGetDeviceType");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaModelGetDeviceType");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3525,6 +3552,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaModelGetDeviceType", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3535,7 +3564,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyConfig");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyConfig");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3582,6 +3611,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyConfig", config);
             }
             mh$.invokeExact(config);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3592,7 +3623,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyModel");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyModel");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3639,6 +3670,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyModel", model);
             }
             mh$.invokeExact(model);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3651,7 +3684,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateGeneratorParams");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateGeneratorParams");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3698,6 +3731,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateGeneratorParams", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3708,7 +3743,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyGeneratorParams");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyGeneratorParams");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3755,6 +3790,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyGeneratorParams", params);
             }
             mh$.invokeExact(params);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3768,7 +3805,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGeneratorParamsSetSearchNumber");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGeneratorParamsSetSearchNumber");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3815,6 +3852,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGeneratorParamsSetSearchNumber", params, name, value);
             }
             return (MemorySegment)mh$.invokeExact(params, name, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3828,7 +3867,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_BOOL
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGeneratorParamsSetSearchBool");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGeneratorParamsSetSearchBool");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3875,6 +3914,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGeneratorParamsSetSearchBool", params, name, value);
             }
             return (MemorySegment)mh$.invokeExact(params, name, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3887,7 +3928,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_INT
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGeneratorParamsTryGraphCaptureWithMaxBatchSize");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGeneratorParamsTryGraphCaptureWithMaxBatchSize");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3934,6 +3975,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGeneratorParamsTryGraphCaptureWithMaxBatchSize", params, max_batch_size);
             }
             return (MemorySegment)mh$.invokeExact(params, max_batch_size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3947,7 +3990,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGeneratorParamsSetGuidance");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGeneratorParamsSetGuidance");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3994,6 +4037,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGeneratorParamsSetGuidance", params, type, data);
             }
             return (MemorySegment)mh$.invokeExact(params, type, data);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4007,7 +4052,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateGenerator");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateGenerator");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4054,6 +4099,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateGenerator", model, params, out);
             }
             return (MemorySegment)mh$.invokeExact(model, params, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4064,7 +4111,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyGenerator");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyGenerator");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4111,6 +4158,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyGenerator", generator);
             }
             mh$.invokeExact(generator);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4122,7 +4171,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_IsDone");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_IsDone");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4169,6 +4218,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_IsDone", generator);
             }
             return (boolean)mh$.invokeExact(generator);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4180,7 +4231,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_IsSessionTerminated");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_IsSessionTerminated");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4227,6 +4278,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_IsSessionTerminated", generator);
             }
             return (boolean)mh$.invokeExact(generator);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4240,7 +4293,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_SetModelInput");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_SetModelInput");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4287,6 +4340,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_SetModelInput", generator, name, tensor);
             }
             return (MemorySegment)mh$.invokeExact(generator, name, tensor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4299,7 +4354,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_SetInputs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_SetInputs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4346,6 +4401,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_SetInputs", generator, named_tensors);
             }
             return (MemorySegment)mh$.invokeExact(generator, named_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4358,7 +4415,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_AppendTokenSequences");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_AppendTokenSequences");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4405,6 +4462,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_AppendTokenSequences", generator, p_sequences);
             }
             return (MemorySegment)mh$.invokeExact(generator, p_sequences);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4418,7 +4477,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_AppendTokens");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_AppendTokens");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4465,6 +4524,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_AppendTokens", generator, input_ids, input_ids_count);
             }
             return (MemorySegment)mh$.invokeExact(generator, input_ids, input_ids_count);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4476,7 +4537,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GenerateNextToken");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GenerateNextToken");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4523,6 +4584,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GenerateNextToken", generator);
             }
             return (MemorySegment)mh$.invokeExact(generator);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4536,7 +4599,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetNextTokens");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetNextTokens");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4583,6 +4646,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetNextTokens", generator, out, out_count);
             }
             return (MemorySegment)mh$.invokeExact(generator, out, out_count);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4596,7 +4661,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_SetRuntimeOption");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_SetRuntimeOption");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4643,6 +4708,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_SetRuntimeOption", generator, key, value);
             }
             return (MemorySegment)mh$.invokeExact(generator, key, value);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4655,7 +4722,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_RewindTo");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_RewindTo");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4702,6 +4769,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_RewindTo", generator, new_length);
             }
             return (MemorySegment)mh$.invokeExact(generator, new_length);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4715,7 +4784,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetInput");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetInput");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4762,6 +4831,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetInput", generator, name, out);
             }
             return (MemorySegment)mh$.invokeExact(generator, name, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4775,7 +4846,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetOutput");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetOutput");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4822,6 +4893,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetOutput", generator, name, out);
             }
             return (MemorySegment)mh$.invokeExact(generator, name, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4834,7 +4907,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetLogits");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetLogits");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4881,6 +4954,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetLogits", generator, out);
             }
             return (MemorySegment)mh$.invokeExact(generator, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4893,7 +4968,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_SetLogits");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_SetLogits");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4940,6 +5015,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_SetLogits", generator, tensor);
             }
             return (MemorySegment)mh$.invokeExact(generator, tensor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4952,7 +5029,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetSequenceCount");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetSequenceCount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4999,6 +5076,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetSequenceCount", generator, index);
             }
             return (long)mh$.invokeExact(generator, index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5011,7 +5090,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGenerator_GetSequenceData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGenerator_GetSequenceData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5058,6 +5137,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGenerator_GetSequenceData", generator, index);
             }
             return (MemorySegment)mh$.invokeExact(generator, index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5070,7 +5151,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateTokenizer");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateTokenizer");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5117,6 +5198,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateTokenizer", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5127,7 +5210,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyTokenizer");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyTokenizer");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5174,6 +5257,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyTokenizer", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5186,7 +5271,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateMultiModalProcessor");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateMultiModalProcessor");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5233,6 +5318,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateMultiModalProcessor", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5243,7 +5330,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyMultiModalProcessor");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyMultiModalProcessor");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5290,6 +5377,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyMultiModalProcessor", processor);
             }
             mh$.invokeExact(processor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5303,7 +5392,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerEncode");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerEncode");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5350,6 +5439,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerEncode", x0, str, sequences);
             }
             return (MemorySegment)mh$.invokeExact(x0, str, sequences);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5364,7 +5455,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerEncodeBatch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerEncodeBatch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5411,6 +5502,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerEncodeBatch", x0, strings, count, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, strings, count, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5424,7 +5517,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerDecodeBatch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerDecodeBatch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5471,6 +5564,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerDecodeBatch", x0, tensor, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, tensor, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5484,7 +5579,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerToTokenId");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerToTokenId");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5531,6 +5626,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerToTokenId", tokenizer, str, token_id);
             }
             return (MemorySegment)mh$.invokeExact(tokenizer, str, token_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5545,7 +5642,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessImages");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessImages");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5592,6 +5689,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessImages", x0, prompt, images, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompt, images, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5606,7 +5705,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessImagesAndPrompts");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessImagesAndPrompts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5653,6 +5752,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessImagesAndPrompts", x0, prompts, images, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompts, images, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5667,7 +5768,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessAudios");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessAudios");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5714,6 +5815,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessAudios", x0, prompt, audios, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompt, audios, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5728,7 +5831,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessAudiosAndPrompts");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessAudiosAndPrompts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5775,6 +5878,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessAudiosAndPrompts", x0, prompts, audios, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompts, audios, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5790,7 +5895,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessImagesAndAudios");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessImagesAndAudios");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5837,6 +5942,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessImagesAndAudios", x0, prompt, images, audios, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompt, images, audios, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5852,7 +5959,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorProcessImagesAndAudiosAndPrompts");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorProcessImagesAndAudiosAndPrompts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5899,6 +6006,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorProcessImagesAndAudiosAndPrompts", x0, prompts, images, audios, input_tensors);
             }
             return (MemorySegment)mh$.invokeExact(x0, prompts, images, audios, input_tensors);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5913,7 +6022,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerDecode");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerDecode");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5960,6 +6069,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerDecode", x0, tokens, token_count, out_string);
             }
             return (MemorySegment)mh$.invokeExact(x0, tokens, token_count, out_string);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5974,7 +6085,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaProcessorDecode");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaProcessorDecode");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6021,6 +6132,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaProcessorDecode", x0, tokens, token_count, out_string);
             }
             return (MemorySegment)mh$.invokeExact(x0, tokens, token_count, out_string);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6037,7 +6150,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerApplyChatTemplate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerApplyChatTemplate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6084,6 +6197,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerApplyChatTemplate", x0, template_str, messages, tools, add_generation_prompt, out_string);
             }
             return (MemorySegment)mh$.invokeExact(x0, template_str, messages, tools, add_generation_prompt, out_string);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6096,7 +6211,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateTokenizerStream");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateTokenizerStream");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6143,6 +6258,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateTokenizerStream", x0, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6155,7 +6272,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateTokenizerStreamFromProcessor");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateTokenizerStreamFromProcessor");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6202,6 +6319,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateTokenizerStreamFromProcessor", x0, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6212,7 +6331,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyTokenizerStream");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyTokenizerStream");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6259,6 +6378,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyTokenizerStream", x0);
             }
             mh$.invokeExact(x0);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6272,7 +6393,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTokenizerStreamDecode");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTokenizerStreamDecode");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6319,6 +6440,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTokenizerStreamDecode", x0, token, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, token, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6334,7 +6457,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateTensorFromBuffer");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateTensorFromBuffer");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6381,6 +6504,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateTensorFromBuffer", data, shape_dims, shape_dims_count, element_type, out);
             }
             return (MemorySegment)mh$.invokeExact(data, shape_dims, shape_dims_count, element_type, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6391,7 +6516,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyTensor");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyTensor");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6438,6 +6563,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyTensor", tensor);
             }
             mh$.invokeExact(tensor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6450,7 +6577,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTensorGetType");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTensorGetType");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6497,6 +6624,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTensorGetType", x0, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6509,7 +6638,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTensorGetShapeRank");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTensorGetShapeRank");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6556,6 +6685,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTensorGetShapeRank", x0, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6569,7 +6700,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTensorGetShape");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTensorGetShape");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6616,6 +6747,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTensorGetShape", x0, shape_dims, shape_dims_count);
             }
             return (MemorySegment)mh$.invokeExact(x0, shape_dims, shape_dims_count);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6628,7 +6761,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaTensorGetData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaTensorGetData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6675,6 +6808,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaTensorGetData", x0, out);
             }
             return (MemorySegment)mh$.invokeExact(x0, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6686,7 +6821,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateNamedTensors");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateNamedTensors");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6733,6 +6868,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateNamedTensors", out);
             }
             return (MemorySegment)mh$.invokeExact(out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6746,7 +6883,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaNamedTensorsGet");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaNamedTensorsGet");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6793,6 +6930,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaNamedTensorsGet", named_tensors, name, out);
             }
             return (MemorySegment)mh$.invokeExact(named_tensors, name, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6806,7 +6945,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaNamedTensorsSet");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaNamedTensorsSet");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6853,6 +6992,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaNamedTensorsSet", named_tensors, name, tensor);
             }
             return (MemorySegment)mh$.invokeExact(named_tensors, name, tensor);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6865,7 +7006,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaNamedTensorsDelete");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaNamedTensorsDelete");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6912,6 +7053,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaNamedTensorsDelete", named_tensors, name);
             }
             return (MemorySegment)mh$.invokeExact(named_tensors, name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6924,7 +7067,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaNamedTensorsCount");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaNamedTensorsCount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6971,6 +7114,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaNamedTensorsCount", named_tensors, out);
             }
             return (MemorySegment)mh$.invokeExact(named_tensors, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6983,7 +7128,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaNamedTensorsGetNames");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaNamedTensorsGetNames");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7030,6 +7175,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaNamedTensorsGetNames", named_tensors, out);
             }
             return (MemorySegment)mh$.invokeExact(named_tensors, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7041,7 +7188,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_INT
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSetCurrentGpuDeviceId");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSetCurrentGpuDeviceId");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7088,6 +7235,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSetCurrentGpuDeviceId", device_id);
             }
             return (MemorySegment)mh$.invokeExact(device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7099,7 +7248,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaGetCurrentGpuDeviceId");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaGetCurrentGpuDeviceId");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7146,6 +7295,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaGetCurrentGpuDeviceId", device_id);
             }
             return (MemorySegment)mh$.invokeExact(device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7157,7 +7308,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateStringArray");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateStringArray");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7204,6 +7355,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateStringArray", out);
             }
             return (MemorySegment)mh$.invokeExact(out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7217,7 +7370,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateStringArrayFromStrings");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateStringArrayFromStrings");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7264,6 +7417,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateStringArrayFromStrings", strs, count, out);
             }
             return (MemorySegment)mh$.invokeExact(strs, count, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7274,7 +7429,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyStringArray");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyStringArray");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7321,6 +7476,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyStringArray", string_array);
             }
             mh$.invokeExact(string_array);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7333,7 +7490,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaStringArrayAddString");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaStringArrayAddString");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7380,6 +7537,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaStringArrayAddString", string_array, str);
             }
             return (MemorySegment)mh$.invokeExact(string_array, str);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7392,7 +7551,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaStringArrayGetCount");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaStringArrayGetCount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7439,6 +7598,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaStringArrayGetCount", string_array, out);
             }
             return (MemorySegment)mh$.invokeExact(string_array, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7452,7 +7613,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaStringArrayGetString");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaStringArrayGetString");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7499,6 +7660,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaStringArrayGetString", string_array, index, out);
             }
             return (MemorySegment)mh$.invokeExact(string_array, index, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7511,7 +7674,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateAdapters");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateAdapters");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7558,6 +7721,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateAdapters", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7568,7 +7733,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyAdapters");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyAdapters");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7615,6 +7780,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyAdapters", adapters);
             }
             mh$.invokeExact(adapters);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7628,7 +7795,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaLoadAdapter");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaLoadAdapter");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7675,6 +7842,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaLoadAdapter", adapters, adapter_file_path, adapter_name);
             }
             return (MemorySegment)mh$.invokeExact(adapters, adapter_file_path, adapter_name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7687,7 +7856,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaUnloadAdapter");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaUnloadAdapter");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7734,6 +7903,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaUnloadAdapter", adapters, adapter_name);
             }
             return (MemorySegment)mh$.invokeExact(adapters, adapter_name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7747,7 +7918,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaSetActiveAdapter");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaSetActiveAdapter");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7794,6 +7965,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaSetActiveAdapter", generator, adapters, adapter_name);
             }
             return (MemorySegment)mh$.invokeExact(generator, adapters, adapter_name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7806,7 +7979,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateEngine");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateEngine");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7853,6 +8026,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateEngine", model, out);
             }
             return (MemorySegment)mh$.invokeExact(model, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7863,7 +8038,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyEngine");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyEngine");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7910,6 +8085,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyEngine", engine);
             }
             mh$.invokeExact(engine);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7922,7 +8099,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaEngineStep");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaEngineStep");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7969,6 +8146,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaEngineStep", engine, request);
             }
             return (MemorySegment)mh$.invokeExact(engine, request);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7981,7 +8160,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaEngineHasPendingRequests");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaEngineHasPendingRequests");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8028,6 +8207,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaEngineHasPendingRequests", engine, out);
             }
             return (MemorySegment)mh$.invokeExact(engine, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8040,7 +8221,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaEngineAddRequest");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaEngineAddRequest");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8087,6 +8268,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaEngineAddRequest", engine, request);
             }
             return (MemorySegment)mh$.invokeExact(engine, request);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8099,7 +8282,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaEngineRemoveRequest");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaEngineRemoveRequest");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8146,6 +8329,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaEngineRemoveRequest", engine, request);
             }
             return (MemorySegment)mh$.invokeExact(engine, request);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8158,7 +8343,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaCreateRequest");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaCreateRequest");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8205,6 +8390,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaCreateRequest", params, out);
             }
             return (MemorySegment)mh$.invokeExact(params, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8217,7 +8404,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestAddTokens");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestAddTokens");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8264,6 +8451,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestAddTokens", request, tokens);
             }
             return (MemorySegment)mh$.invokeExact(request, tokens);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8274,7 +8463,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaDestroyRequest");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaDestroyRequest");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8321,6 +8510,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaDestroyRequest", request);
             }
             mh$.invokeExact(request);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8333,7 +8524,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestSetOpaqueData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestSetOpaqueData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8380,6 +8571,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestSetOpaqueData", request, opaque_data);
             }
             return (MemorySegment)mh$.invokeExact(request, opaque_data);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8392,7 +8585,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestGetOpaqueData");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestGetOpaqueData");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8439,6 +8632,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestGetOpaqueData", request, opaque_data);
             }
             return (MemorySegment)mh$.invokeExact(request, opaque_data);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8451,7 +8646,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestHasUnseenTokens");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestHasUnseenTokens");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8498,6 +8693,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestHasUnseenTokens", request, out);
             }
             return (MemorySegment)mh$.invokeExact(request, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8510,7 +8707,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestGetUnseenToken");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestGetUnseenToken");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8557,6 +8754,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestGetUnseenToken", request, out);
             }
             return (MemorySegment)mh$.invokeExact(request, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8569,7 +8768,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRequestIsDone");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRequestIsDone");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8616,6 +8815,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRequestIsDone", request, out);
             }
             return (MemorySegment)mh$.invokeExact(request, out);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8627,7 +8828,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaRegisterExecutionProviderLibrary");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaRegisterExecutionProviderLibrary");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8674,6 +8875,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaRegisterExecutionProviderLibrary", registration_name, library_path);
             }
             mh$.invokeExact(registration_name, library_path);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8684,7 +8887,7 @@ public class ort_genai_c_h {
             ort_genai_c_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = ort_genai_c_h.findOrThrow("OgaUnregisterExecutionProviderLibrary");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OgaUnregisterExecutionProviderLibrary");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8731,6 +8934,8 @@ public class ort_genai_c_h {
                 traceDowncall("OgaUnregisterExecutionProviderLibrary", registration_name);
             }
             mh$.invokeExact(registration_name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }

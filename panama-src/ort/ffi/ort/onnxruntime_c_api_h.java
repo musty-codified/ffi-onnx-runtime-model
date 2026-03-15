@@ -12,63 +12,18 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-public class onnxruntime_c_api_h {
+public class onnxruntime_c_api_h extends onnxruntime_c_api_h$shared {
 
     onnxruntime_c_api_h() {
         // Should not be called directly
     }
 
     static final Arena LIBRARY_ARENA = Arena.ofAuto();
-    static final boolean TRACE_DOWNCALLS = Boolean.getBoolean("jextract.trace.downcalls");
-
-    static void traceDowncall(String name, Object... args) {
-         String traceArgs = Arrays.stream(args)
-                       .map(Object::toString)
-                       .collect(Collectors.joining(", "));
-         System.out.printf("%s(%s)\n", name, traceArgs);
-    }
-
-    static MemorySegment findOrThrow(String symbol) {
-        return SYMBOL_LOOKUP.find(symbol)
-            .orElseThrow(() -> new UnsatisfiedLinkError("unresolved symbol: " + symbol));
-    }
-
-    static MethodHandle upcallHandle(Class<?> fi, String name, FunctionDescriptor fdesc) {
-        try {
-            return MethodHandles.lookup().findVirtual(fi, name, fdesc.toMethodType());
-        } catch (ReflectiveOperationException ex) {
-            throw new AssertionError(ex);
-        }
-    }
-
-    static MemoryLayout align(MemoryLayout layout, long align) {
-        return switch (layout) {
-            case PaddingLayout p -> p;
-            case ValueLayout v -> v.withByteAlignment(align);
-            case GroupLayout g -> {
-                MemoryLayout[] alignedMembers = g.memberLayouts().stream()
-                        .map(m -> align(m, align)).toArray(MemoryLayout[]::new);
-                yield g instanceof StructLayout ?
-                        MemoryLayout.structLayout(alignedMembers) : MemoryLayout.unionLayout(alignedMembers);
-            }
-            case SequenceLayout s -> MemoryLayout.sequenceLayout(s.elementCount(), align(s.elementLayout(), align));
-        };
-    }
 
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("onnxruntime"), LIBRARY_ARENA)
             .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
 
-    public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-    public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-    public static final ValueLayout.OfShort C_SHORT = ValueLayout.JAVA_SHORT;
-    public static final ValueLayout.OfInt C_INT = ValueLayout.JAVA_INT;
-    public static final ValueLayout.OfLong C_LONG_LONG = ValueLayout.JAVA_LONG;
-    public static final ValueLayout.OfFloat C_FLOAT = ValueLayout.JAVA_FLOAT;
-    public static final ValueLayout.OfDouble C_DOUBLE = ValueLayout.JAVA_DOUBLE;
-    public static final AddressLayout C_POINTER = ValueLayout.ADDRESS
-            .withTargetLayout(MemoryLayout.sequenceLayout(java.lang.Long.MAX_VALUE, JAVA_BYTE));
-    public static final ValueLayout.OfLong C_LONG = ValueLayout.JAVA_LONG;
     private static final int true_ = (int)1L;
     /**
      * {@snippet lang=c :
@@ -1185,10 +1140,10 @@ public class onnxruntime_c_api_h {
     public static int _STRINGS_H() {
         return _STRINGS_H;
     }
-    private static final int ORT_API_VERSION = (int)22L;
+    private static final int ORT_API_VERSION = (int)21L;
     /**
      * {@snippet lang=c :
-     * #define ORT_API_VERSION 22
+     * #define ORT_API_VERSION 21
      * }
      */
     public static int ORT_API_VERSION() {
@@ -1769,7 +1724,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_LONG    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__ctype_get_mb_cur_max");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__ctype_get_mb_cur_max");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1816,6 +1771,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("__ctype_get_mb_cur_max");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1827,7 +1784,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("atof");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atof");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1874,6 +1831,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("atof", __nptr);
             }
             return (double)mh$.invokeExact(__nptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1885,7 +1844,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("atoi");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atoi");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1932,6 +1891,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("atoi", __nptr);
             }
             return (int)mh$.invokeExact(__nptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -1943,7 +1904,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("atol");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atol");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -1990,6 +1951,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("atol", __nptr);
             }
             return (long)mh$.invokeExact(__nptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2001,7 +1964,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("atoll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atoll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2048,6 +2011,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("atoll", __nptr);
             }
             return (long)mh$.invokeExact(__nptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2060,7 +2025,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtod");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtod");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2107,6 +2072,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtod", __nptr, __endptr);
             }
             return (double)mh$.invokeExact(__nptr, __endptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2119,7 +2086,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtof");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtof");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2166,6 +2133,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtof", __nptr, __endptr);
             }
             return (float)mh$.invokeExact(__nptr, __endptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2179,7 +2148,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtol");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtol");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2226,6 +2195,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtol", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2239,7 +2210,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtoul");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoul");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2286,6 +2257,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtoul", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2299,7 +2272,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtoq");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoq");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2346,6 +2319,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtoq", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2359,7 +2334,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtouq");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtouq");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2406,6 +2381,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtouq", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2419,7 +2396,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtoll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2466,6 +2443,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtoll", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2479,7 +2458,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtoull");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtoull");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2526,6 +2505,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtoull", __nptr, __endptr, __base);
             }
             return (long)mh$.invokeExact(__nptr, __endptr, __base);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2537,7 +2518,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("l64a");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("l64a");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2584,6 +2565,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("l64a", __n);
             }
             return (MemorySegment)mh$.invokeExact(__n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2595,7 +2578,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("a64l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("a64l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2642,6 +2625,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("a64l", __s);
             }
             return (long)mh$.invokeExact(__s);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2867,7 +2852,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("select");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("select");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2914,6 +2899,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("select", __nfds, __readfds, __writefds, __exceptfds, __timeout);
             }
             return (int)mh$.invokeExact(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -2930,7 +2917,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("pselect");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("pselect");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2977,6 +2964,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("pselect", __nfds, __readfds, __writefds, __exceptfds, __timeout, __sigmask);
             }
             return (int)mh$.invokeExact(__nfds, __readfds, __writefds, __exceptfds, __timeout, __sigmask);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3046,7 +3035,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_LONG    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("random");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("random");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3093,6 +3082,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("random");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3103,7 +3094,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("srandom");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srandom");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3150,6 +3141,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("srandom", __seed);
             }
             mh$.invokeExact(__seed);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3163,7 +3156,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("initstate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("initstate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3210,6 +3203,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("initstate", __seed, __statebuf, __statelen);
             }
             return (MemorySegment)mh$.invokeExact(__seed, __statebuf, __statelen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3221,7 +3216,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("setstate");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setstate");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3268,6 +3263,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("setstate", __statebuf);
             }
             return (MemorySegment)mh$.invokeExact(__statebuf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3280,7 +3277,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("random_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("random_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3327,6 +3324,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("random_r", __buf, __result);
             }
             return (int)mh$.invokeExact(__buf, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3339,7 +3338,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("srandom_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srandom_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3386,6 +3385,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("srandom_r", __seed, __buf);
             }
             return (int)mh$.invokeExact(__seed, __buf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3400,7 +3401,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("initstate_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("initstate_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3447,6 +3448,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("initstate_r", __seed, __statebuf, __statelen, __buf);
             }
             return (int)mh$.invokeExact(__seed, __statebuf, __statelen, __buf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3459,7 +3462,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("setstate_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setstate_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3506,6 +3509,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("setstate_r", __statebuf, __buf);
             }
             return (int)mh$.invokeExact(__statebuf, __buf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3515,7 +3520,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_INT    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("rand");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rand");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3562,6 +3567,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("rand");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3572,7 +3579,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("srand");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srand");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3619,6 +3626,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("srand", __seed);
             }
             mh$.invokeExact(__seed);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3630,7 +3639,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("rand_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rand_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3677,6 +3686,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("rand_r", __seed);
             }
             return (int)mh$.invokeExact(__seed);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3686,7 +3697,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_DOUBLE    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("drand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("drand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3733,6 +3744,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("drand48");
             }
             return (double)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3744,7 +3757,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("erand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("erand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3791,6 +3804,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("erand48", __xsubi);
             }
             return (double)mh$.invokeExact(__xsubi);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3800,7 +3815,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_LONG    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("lrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3847,6 +3862,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("lrand48");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3858,7 +3875,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("nrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("nrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3905,6 +3922,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("nrand48", __xsubi);
             }
             return (long)mh$.invokeExact(__xsubi);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3914,7 +3933,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_LONG    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3961,6 +3980,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mrand48");
             }
             return (long)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -3972,7 +3993,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("jrand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("jrand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4019,6 +4040,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("jrand48", __xsubi);
             }
             return (long)mh$.invokeExact(__xsubi);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4029,7 +4052,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("srand48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srand48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4076,6 +4099,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("srand48", __seedval);
             }
             mh$.invokeExact(__seedval);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4087,7 +4112,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("seed48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("seed48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4134,6 +4159,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("seed48", __seed16v);
             }
             return (MemorySegment)mh$.invokeExact(__seed16v);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4144,7 +4171,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("lcong48");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lcong48");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4191,6 +4218,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("lcong48", __param);
             }
             mh$.invokeExact(__param);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4203,7 +4232,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("drand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("drand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4250,6 +4279,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("drand48_r", __buffer, __result);
             }
             return (int)mh$.invokeExact(__buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4263,7 +4294,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("erand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("erand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4310,6 +4341,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("erand48_r", __xsubi, __buffer, __result);
             }
             return (int)mh$.invokeExact(__xsubi, __buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4322,7 +4355,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("lrand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lrand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4369,6 +4402,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("lrand48_r", __buffer, __result);
             }
             return (int)mh$.invokeExact(__buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4382,7 +4417,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("nrand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("nrand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4429,6 +4464,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("nrand48_r", __xsubi, __buffer, __result);
             }
             return (int)mh$.invokeExact(__xsubi, __buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4441,7 +4478,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mrand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mrand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4488,6 +4525,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mrand48_r", __buffer, __result);
             }
             return (int)mh$.invokeExact(__buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4501,7 +4540,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("jrand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("jrand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4548,6 +4587,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("jrand48_r", __xsubi, __buffer, __result);
             }
             return (int)mh$.invokeExact(__xsubi, __buffer, __result);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4560,7 +4601,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("srand48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("srand48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4607,6 +4648,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("srand48_r", __seedval, __buffer);
             }
             return (int)mh$.invokeExact(__seedval, __buffer);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4619,7 +4662,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("seed48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("seed48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4666,6 +4709,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("seed48_r", __seed16v, __buffer);
             }
             return (int)mh$.invokeExact(__seed16v, __buffer);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4678,7 +4723,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("lcong48_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lcong48_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4725,6 +4770,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("lcong48_r", __param, __buffer);
             }
             return (int)mh$.invokeExact(__param, __buffer);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4736,7 +4783,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("malloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("malloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4783,6 +4830,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("malloc", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4795,7 +4844,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("calloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("calloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4842,6 +4891,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("calloc", __nmemb, __size);
             }
             return (MemorySegment)mh$.invokeExact(__nmemb, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4854,7 +4905,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("realloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4901,6 +4952,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("realloc", __ptr, __size);
             }
             return (MemorySegment)mh$.invokeExact(__ptr, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4911,7 +4964,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("free");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("free");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4958,6 +5011,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("free", __ptr);
             }
             mh$.invokeExact(__ptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -4971,7 +5026,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("reallocarray");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("reallocarray");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5018,6 +5073,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("reallocarray", __ptr, __nmemb, __size);
             }
             return (MemorySegment)mh$.invokeExact(__ptr, __nmemb, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5029,7 +5086,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("alloca");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("alloca");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5076,6 +5133,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("alloca", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5087,7 +5146,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("valloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("valloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5134,6 +5193,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("valloc", __size);
             }
             return (MemorySegment)mh$.invokeExact(__size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5147,7 +5208,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("posix_memalign");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("posix_memalign");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5194,6 +5255,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("posix_memalign", __memptr, __alignment, __size);
             }
             return (int)mh$.invokeExact(__memptr, __alignment, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5206,7 +5269,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("aligned_alloc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("aligned_alloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5253,6 +5316,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("aligned_alloc", __alignment, __size);
             }
             return (MemorySegment)mh$.invokeExact(__alignment, __size);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5261,7 +5326,7 @@ public class onnxruntime_c_api_h {
     private static class abort {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("abort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("abort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5308,6 +5373,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("abort");
             }
             mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5319,7 +5386,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("atexit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("atexit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5366,6 +5433,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("atexit", __func);
             }
             return (int)mh$.invokeExact(__func);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5377,7 +5446,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("at_quick_exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("at_quick_exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5424,6 +5493,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("at_quick_exit", __func);
             }
             return (int)mh$.invokeExact(__func);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5436,7 +5507,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("on_exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("on_exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5483,6 +5554,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("on_exit", __func, __arg);
             }
             return (int)mh$.invokeExact(__func, __arg);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5493,7 +5566,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5540,6 +5613,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("exit", __status);
             }
             mh$.invokeExact(__status);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5550,7 +5625,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("quick_exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("quick_exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5597,6 +5672,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("quick_exit", __status);
             }
             mh$.invokeExact(__status);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5607,7 +5684,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("_Exit");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("_Exit");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5654,6 +5731,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("_Exit", __status);
             }
             mh$.invokeExact(__status);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5665,7 +5744,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("getenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5712,6 +5791,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("getenv", __name);
             }
             return (MemorySegment)mh$.invokeExact(__name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5723,7 +5804,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("putenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("putenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5770,6 +5851,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("putenv", __string);
             }
             return (int)mh$.invokeExact(__string);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5783,7 +5866,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("setenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("setenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5830,6 +5913,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("setenv", __name, __value, __replace);
             }
             return (int)mh$.invokeExact(__name, __value, __replace);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5841,7 +5926,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("unsetenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("unsetenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5888,6 +5973,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("unsetenv", __name);
             }
             return (int)mh$.invokeExact(__name);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5897,7 +5984,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_INT    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("clearenv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("clearenv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5944,6 +6031,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("clearenv");
             }
             return (int)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -5955,7 +6044,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mktemp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mktemp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6002,6 +6091,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mktemp", __template);
             }
             return (MemorySegment)mh$.invokeExact(__template);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6013,7 +6104,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mkstemp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mkstemp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6060,6 +6151,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mkstemp", __template);
             }
             return (int)mh$.invokeExact(__template);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6072,7 +6165,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mkstemps");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mkstemps");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6119,6 +6212,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mkstemps", __template, __suffixlen);
             }
             return (int)mh$.invokeExact(__template, __suffixlen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6130,7 +6225,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mkdtemp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mkdtemp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6177,6 +6272,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mkdtemp", __template);
             }
             return (MemorySegment)mh$.invokeExact(__template);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6188,7 +6285,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("system");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("system");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6235,6 +6332,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("system", __command);
             }
             return (int)mh$.invokeExact(__command);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6247,7 +6346,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("realpath");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("realpath");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6294,6 +6393,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("realpath", __name, __resolved);
             }
             return (MemorySegment)mh$.invokeExact(__name, __resolved);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6309,7 +6410,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("bsearch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bsearch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6356,6 +6457,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("bsearch", __key, __base, __nmemb, __size, __compar);
             }
             return (MemorySegment)mh$.invokeExact(__key, __base, __nmemb, __size, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6369,7 +6472,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("qsort");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("qsort");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6416,6 +6519,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("qsort", __base, __nmemb, __size, __compar);
             }
             mh$.invokeExact(__base, __nmemb, __size, __compar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6427,7 +6532,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("abs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("abs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6474,6 +6579,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("abs", __x);
             }
             return (int)mh$.invokeExact(__x);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6485,7 +6592,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("labs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("labs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6532,6 +6639,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("labs", __x);
             }
             return (long)mh$.invokeExact(__x);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6543,7 +6652,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("llabs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("llabs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6590,6 +6699,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("llabs", __x);
             }
             return (long)mh$.invokeExact(__x);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6602,7 +6713,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("div");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("div");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6649,6 +6760,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("div", allocator, __numer, __denom);
             }
             return (MemorySegment)mh$.invokeExact(allocator, __numer, __denom);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6661,7 +6774,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ldiv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ldiv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6708,6 +6821,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ldiv", allocator, __numer, __denom);
             }
             return (MemorySegment)mh$.invokeExact(allocator, __numer, __denom);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6720,7 +6835,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("lldiv");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("lldiv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6767,6 +6882,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("lldiv", allocator, __numer, __denom);
             }
             return (MemorySegment)mh$.invokeExact(allocator, __numer, __denom);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6781,7 +6898,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ecvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ecvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6828,6 +6945,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ecvt", __value, __ndigit, __decpt, __sign);
             }
             return (MemorySegment)mh$.invokeExact(__value, __ndigit, __decpt, __sign);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6842,7 +6961,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("fcvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("fcvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6889,6 +7008,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("fcvt", __value, __ndigit, __decpt, __sign);
             }
             return (MemorySegment)mh$.invokeExact(__value, __ndigit, __decpt, __sign);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6902,7 +7023,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("gcvt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("gcvt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6949,6 +7070,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("gcvt", __value, __ndigit, __buf);
             }
             return (MemorySegment)mh$.invokeExact(__value, __ndigit, __buf);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -6965,7 +7088,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ecvt_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ecvt_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7012,6 +7135,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ecvt_r", __value, __ndigit, __decpt, __sign, __buf, __len);
             }
             return (int)mh$.invokeExact(__value, __ndigit, __decpt, __sign, __buf, __len);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7028,7 +7153,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("fcvt_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("fcvt_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7075,6 +7200,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("fcvt_r", __value, __ndigit, __decpt, __sign, __buf, __len);
             }
             return (int)mh$.invokeExact(__value, __ndigit, __decpt, __sign, __buf, __len);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7087,7 +7214,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mblen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mblen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7134,6 +7261,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mblen", __s, __n);
             }
             return (int)mh$.invokeExact(__s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7147,7 +7276,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mbtowc");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mbtowc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7194,6 +7323,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mbtowc", __pwc, __s, __n);
             }
             return (int)mh$.invokeExact(__pwc, __s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7206,7 +7337,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("wctomb");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wctomb");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7253,6 +7384,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("wctomb", __s, __wchar);
             }
             return (int)mh$.invokeExact(__s, __wchar);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7266,7 +7399,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("mbstowcs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("mbstowcs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7313,6 +7446,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("mbstowcs", __pwcs, __s, __n);
             }
             return (long)mh$.invokeExact(__pwcs, __s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7326,7 +7461,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("wcstombs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("wcstombs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7373,6 +7508,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("wcstombs", __s, __pwcs, __n);
             }
             return (long)mh$.invokeExact(__s, __pwcs, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7384,7 +7521,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("rpmatch");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rpmatch");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7431,6 +7568,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("rpmatch", __response);
             }
             return (int)mh$.invokeExact(__response);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7444,7 +7583,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("getsubopt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getsubopt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7491,6 +7630,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("getsubopt", __optionp, __tokens, __valuep);
             }
             return (int)mh$.invokeExact(__optionp, __tokens, __valuep);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7503,7 +7644,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("getloadavg");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("getloadavg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7550,6 +7691,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("getloadavg", __loadavg, __nelem);
             }
             return (int)mh$.invokeExact(__loadavg, __nelem);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7563,7 +7706,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memcpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memcpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7610,6 +7753,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memcpy", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7623,7 +7768,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memmove");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memmove");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7670,6 +7815,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memmove", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7684,7 +7831,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memccpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memccpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7731,6 +7878,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memccpy", __dest, __src, __c, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __c, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7744,7 +7893,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memset");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memset");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7791,6 +7940,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memset", __s, __c, __n);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7804,7 +7955,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memcmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memcmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7851,6 +8002,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memcmp", __s1, __s2, __n);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7864,7 +8017,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__memcmpeq");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__memcmpeq");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7911,6 +8064,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("__memcmpeq", __s1, __s2, __n);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7924,7 +8079,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("memchr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("memchr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7971,6 +8126,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("memchr", __s, __c, __n);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -7983,7 +8140,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8030,6 +8187,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcpy", __dest, __src);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8043,7 +8202,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strncpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strncpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8090,6 +8249,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strncpy", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8102,7 +8263,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcat");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcat");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8149,6 +8310,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcat", __dest, __src);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8162,7 +8325,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strncat");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strncat");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8209,6 +8372,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strncat", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8221,7 +8386,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8268,6 +8433,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcmp", __s1, __s2);
             }
             return (int)mh$.invokeExact(__s1, __s2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8281,7 +8448,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strncmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strncmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8328,6 +8495,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strncmp", __s1, __s2, __n);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8340,7 +8509,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcoll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcoll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8387,6 +8556,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcoll", __s1, __s2);
             }
             return (int)mh$.invokeExact(__s1, __s2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8400,7 +8571,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strxfrm");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strxfrm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8447,6 +8618,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strxfrm", __dest, __src, __n);
             }
             return (long)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8478,7 +8651,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcoll_l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcoll_l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8525,6 +8698,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcoll_l", __s1, __s2, __l);
             }
             return (int)mh$.invokeExact(__s1, __s2, __l);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8539,7 +8714,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strxfrm_l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strxfrm_l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8586,6 +8761,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strxfrm_l", __dest, __src, __n, __l);
             }
             return (long)mh$.invokeExact(__dest, __src, __n, __l);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8597,7 +8774,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strdup");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strdup");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8644,6 +8821,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strdup", __s);
             }
             return (MemorySegment)mh$.invokeExact(__s);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8656,7 +8835,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strndup");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strndup");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8703,6 +8882,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strndup", __string, __n);
             }
             return (MemorySegment)mh$.invokeExact(__string, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8715,7 +8896,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strchr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strchr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8762,6 +8943,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strchr", __s, __c);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8774,7 +8957,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strrchr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strrchr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8821,6 +9004,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strrchr", __s, __c);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8833,7 +9018,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcspn");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcspn");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8880,6 +9065,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcspn", __s, __reject);
             }
             return (long)mh$.invokeExact(__s, __reject);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8892,7 +9079,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strspn");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strspn");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8939,6 +9126,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strspn", __s, __accept);
             }
             return (long)mh$.invokeExact(__s, __accept);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -8951,7 +9140,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strpbrk");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strpbrk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8998,6 +9187,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strpbrk", __s, __accept);
             }
             return (MemorySegment)mh$.invokeExact(__s, __accept);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9010,7 +9201,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strstr");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strstr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9057,6 +9248,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strstr", __haystack, __needle);
             }
             return (MemorySegment)mh$.invokeExact(__haystack, __needle);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9069,7 +9262,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtok");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtok");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9116,6 +9309,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtok", __s, __delim);
             }
             return (MemorySegment)mh$.invokeExact(__s, __delim);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9129,7 +9324,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__strtok_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__strtok_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9176,6 +9371,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("__strtok_r", __s, __delim, __save_ptr);
             }
             return (MemorySegment)mh$.invokeExact(__s, __delim, __save_ptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9189,7 +9386,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strtok_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strtok_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9236,6 +9433,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strtok_r", __s, __delim, __save_ptr);
             }
             return (MemorySegment)mh$.invokeExact(__s, __delim, __save_ptr);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9247,7 +9446,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strlen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strlen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9294,6 +9493,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strlen", __s);
             }
             return (long)mh$.invokeExact(__s);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9306,7 +9507,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strnlen");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strnlen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9353,6 +9554,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strnlen", __string, __maxlen);
             }
             return (long)mh$.invokeExact(__string, __maxlen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9364,7 +9567,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strerror");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strerror");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9411,6 +9614,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strerror", __errnum);
             }
             return (MemorySegment)mh$.invokeExact(__errnum);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9424,7 +9629,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__xpg_strerror_r");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__xpg_strerror_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9471,6 +9676,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strerror_r", __errnum, __buf, __buflen);
             }
             return (int)mh$.invokeExact(__errnum, __buf, __buflen);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9483,7 +9690,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strerror_l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strerror_l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9530,6 +9737,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strerror_l", __errnum, __l);
             }
             return (MemorySegment)mh$.invokeExact(__errnum, __l);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9543,7 +9752,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("bcmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bcmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9590,6 +9799,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("bcmp", __s1, __s2, __n);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9602,7 +9813,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("bcopy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9649,6 +9860,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("bcopy", __src, __dest, __n);
             }
             mh$.invokeExact(__src, __dest, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9660,7 +9873,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("bzero");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("bzero");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9707,6 +9920,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("bzero", __s, __n);
             }
             mh$.invokeExact(__s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9719,7 +9934,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("index");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("index");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9766,6 +9981,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("index", __s, __c);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9778,7 +9995,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("rindex");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("rindex");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9825,6 +10042,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("rindex", __s, __c);
             }
             return (MemorySegment)mh$.invokeExact(__s, __c);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9836,7 +10055,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ffs");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ffs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9883,6 +10102,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ffs", __i);
             }
             return (int)mh$.invokeExact(__i);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9894,7 +10115,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ffsl");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ffsl");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9941,6 +10162,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ffsl", __l);
             }
             return (int)mh$.invokeExact(__l);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -9952,7 +10175,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("ffsll");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("ffsll");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9999,6 +10222,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("ffsll", __ll);
             }
             return (int)mh$.invokeExact(__ll);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10011,7 +10236,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcasecmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcasecmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10058,6 +10283,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcasecmp", __s1, __s2);
             }
             return (int)mh$.invokeExact(__s1, __s2);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10071,7 +10298,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strncasecmp");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strncasecmp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10118,6 +10345,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strncasecmp", __s1, __s2, __n);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10131,7 +10360,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strcasecmp_l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strcasecmp_l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10178,6 +10407,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strcasecmp_l", __s1, __s2, __loc);
             }
             return (int)mh$.invokeExact(__s1, __s2, __loc);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10192,7 +10423,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strncasecmp_l");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strncasecmp_l");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10239,6 +10470,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strncasecmp_l", __s1, __s2, __n, __loc);
             }
             return (int)mh$.invokeExact(__s1, __s2, __n, __loc);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10250,7 +10483,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("explicit_bzero");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("explicit_bzero");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10297,6 +10530,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("explicit_bzero", __s, __n);
             }
             mh$.invokeExact(__s, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10309,7 +10544,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strsep");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strsep");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10356,6 +10591,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strsep", __stringp, __delim);
             }
             return (MemorySegment)mh$.invokeExact(__stringp, __delim);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10367,7 +10604,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("strsignal");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("strsignal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10414,6 +10651,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("strsignal", __sig);
             }
             return (MemorySegment)mh$.invokeExact(__sig);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10426,7 +10665,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__stpcpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__stpcpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10473,6 +10712,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("__stpcpy", __dest, __src);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10485,7 +10726,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("stpcpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("stpcpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10532,6 +10773,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("stpcpy", __dest, __src);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10545,7 +10788,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("__stpncpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("__stpncpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10592,6 +10835,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("__stpncpy", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -10605,7 +10850,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("stpncpy");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("stpncpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10652,6 +10897,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("stpncpy", __dest, __src, __n);
             }
             return (MemorySegment)mh$.invokeExact(__dest, __src, __n);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11151,24 +11398,6 @@ public class onnxruntime_c_api_h {
     public static int ORT_EP_FAIL() {
         return ORT_EP_FAIL;
     }
-    private static final int ORT_MODEL_LOAD_CANCELED = (int)12L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtErrorCode.ORT_MODEL_LOAD_CANCELED = 12
-     * }
-     */
-    public static int ORT_MODEL_LOAD_CANCELED() {
-        return ORT_MODEL_LOAD_CANCELED;
-    }
-    private static final int ORT_MODEL_REQUIRES_COMPILATION = (int)13L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtErrorCode.ORT_MODEL_REQUIRES_COMPILATION = 13
-     * }
-     */
-    public static int ORT_MODEL_REQUIRES_COMPILATION() {
-        return ORT_MODEL_REQUIRES_COMPILATION;
-    }
     private static final int ORT_OP_ATTR_UNDEFINED = (int)0L;
     /**
      * {@snippet lang=c :
@@ -11445,96 +11674,6 @@ public class onnxruntime_c_api_h {
     public static int OrtMemoryInfoDeviceType_FPGA() {
         return OrtMemoryInfoDeviceType_FPGA;
     }
-    private static final int OrtHardwareDeviceType_CPU = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtHardwareDeviceType.OrtHardwareDeviceType_CPU = 0
-     * }
-     */
-    public static int OrtHardwareDeviceType_CPU() {
-        return OrtHardwareDeviceType_CPU;
-    }
-    private static final int OrtHardwareDeviceType_GPU = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtHardwareDeviceType.OrtHardwareDeviceType_GPU = 1
-     * }
-     */
-    public static int OrtHardwareDeviceType_GPU() {
-        return OrtHardwareDeviceType_GPU;
-    }
-    private static final int OrtHardwareDeviceType_NPU = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtHardwareDeviceType.OrtHardwareDeviceType_NPU = 2
-     * }
-     */
-    public static int OrtHardwareDeviceType_NPU() {
-        return OrtHardwareDeviceType_NPU;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_DEFAULT = (int)0L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_DEFAULT = 0
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_DEFAULT() {
-        return OrtExecutionProviderDevicePolicy_DEFAULT;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_PREFER_CPU = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_PREFER_CPU = 1
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_PREFER_CPU() {
-        return OrtExecutionProviderDevicePolicy_PREFER_CPU;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_PREFER_NPU = (int)2L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_PREFER_NPU = 2
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_PREFER_NPU() {
-        return OrtExecutionProviderDevicePolicy_PREFER_NPU;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_PREFER_GPU = (int)3L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_PREFER_GPU = 3
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_PREFER_GPU() {
-        return OrtExecutionProviderDevicePolicy_PREFER_GPU;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_MAX_PERFORMANCE = (int)4L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_MAX_PERFORMANCE = 4
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_MAX_PERFORMANCE() {
-        return OrtExecutionProviderDevicePolicy_MAX_PERFORMANCE;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_MAX_EFFICIENCY = (int)5L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_MAX_EFFICIENCY = 5
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_MAX_EFFICIENCY() {
-        return OrtExecutionProviderDevicePolicy_MAX_EFFICIENCY;
-    }
-    private static final int OrtExecutionProviderDevicePolicy_MIN_OVERALL_POWER = (int)6L;
-    /**
-     * {@snippet lang=c :
-     * enum OrtExecutionProviderDevicePolicy.OrtExecutionProviderDevicePolicy_MIN_OVERALL_POWER = 6
-     * }
-     */
-    public static int OrtExecutionProviderDevicePolicy_MIN_OVERALL_POWER() {
-        return OrtExecutionProviderDevicePolicy_MIN_OVERALL_POWER;
-    }
     private static final int OrtCudnnConvAlgoSearchExhaustive = (int)0L;
     /**
      * {@snippet lang=c :
@@ -11567,7 +11706,7 @@ public class onnxruntime_c_api_h {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             onnxruntime_c_api_h.C_POINTER    );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtGetApiBase");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtGetApiBase");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11614,6 +11753,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtGetApiBase");
             }
             return (MemorySegment)mh$.invokeExact();
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11661,7 +11802,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtSessionOptionsAppendExecutionProvider_CUDA");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtSessionOptionsAppendExecutionProvider_CUDA");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11708,6 +11849,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtSessionOptionsAppendExecutionProvider_CUDA", options, device_id);
             }
             return (MemorySegment)mh$.invokeExact(options, device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11720,7 +11863,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtSessionOptionsAppendExecutionProvider_ROCM");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtSessionOptionsAppendExecutionProvider_ROCM");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11767,6 +11910,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtSessionOptionsAppendExecutionProvider_ROCM", options, device_id);
             }
             return (MemorySegment)mh$.invokeExact(options, device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11779,7 +11924,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtSessionOptionsAppendExecutionProvider_MIGraphX");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtSessionOptionsAppendExecutionProvider_MIGraphX");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11826,6 +11971,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtSessionOptionsAppendExecutionProvider_MIGraphX", options, device_id);
             }
             return (MemorySegment)mh$.invokeExact(options, device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11838,7 +11985,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtSessionOptionsAppendExecutionProvider_Dnnl");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtSessionOptionsAppendExecutionProvider_Dnnl");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11885,6 +12032,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtSessionOptionsAppendExecutionProvider_Dnnl", options, use_arena);
             }
             return (MemorySegment)mh$.invokeExact(options, use_arena);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
@@ -11897,7 +12046,7 @@ public class onnxruntime_c_api_h {
             onnxruntime_c_api_h.C_INT
         );
 
-        public static final MemorySegment ADDR = onnxruntime_c_api_h.findOrThrow("OrtSessionOptionsAppendExecutionProvider_Tensorrt");
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("OrtSessionOptionsAppendExecutionProvider_Tensorrt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11944,6 +12093,8 @@ public class onnxruntime_c_api_h {
                 traceDowncall("OrtSessionOptionsAppendExecutionProvider_Tensorrt", options, device_id);
             }
             return (MemorySegment)mh$.invokeExact(options, device_id);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
         } catch (Throwable ex$) {
            throw new AssertionError("should not reach here", ex$);
         }
